@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 
 public class Bullet {
@@ -45,6 +46,11 @@ public class Bullet {
 			g2.translate(x, y);
 			g2.fill(shape);
 			g2.setTransform(oldTransform);
+		}
+		public Shape getShape()
+		{
+			
+			return new Area(new Ellipse2D.Double(x,y,size,size));
 		}
 		public double getX() {
 			return x;

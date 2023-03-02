@@ -55,8 +55,8 @@ public class Player {
 		
 		g2.translate(x,y);
 		AffineTransform tran=new AffineTransform();
-		tran.rotate(Math.toRadians(angle+45),PLAYER_SIZE/2,PLAYER_SIZE/2);
-		g2.drawImage(image, tran,null); 
+		tran.rotate(Math.toRadians(angle+90),PLAYER_SIZE/2,PLAYER_SIZE/2);
+		g2.drawImage(speedUp?image_speed:image, tran,null); 
 		g2.setTransform(oldTranform);
 	}
 	public double getX() {
