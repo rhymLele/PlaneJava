@@ -21,6 +21,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 
 import game.obj.Bullet;
+import game.obj.Effect;
 import game.obj.Player;
 import game.obj.Rocket;
 
@@ -34,6 +35,7 @@ public class PanelGame extends JComponent{
 	private boolean start=true;
 	private int shotTime;
 	private Key key;
+	private int score=0;
 //	private ImageIcon image2;
 //	private Image pic;
 	//game fps
@@ -44,6 +46,7 @@ public class PanelGame extends JComponent{
 	private List<Bullet> bullets;
 	private List<Rocket> rockets;
 	
+	private List <Effect> boomEffects;
 	//fps cac thu 
 	public void start()
 	{
@@ -98,6 +101,7 @@ public class PanelGame extends JComponent{
 		player=new Player(); 
 		player.changeLocation(683, 384);
 		rockets=new ArrayList<>();
+		boomEffects=new ArrayList<>();
 		new Thread(new Runnable() {
 			
 			@Override
@@ -113,6 +117,7 @@ public class PanelGame extends JComponent{
 	}
 	
 	private void resetGame() {
+		score=0;
 		rockets.clear();
 		bullets.clear();
 		player.changeLocation(683, 384);
@@ -269,7 +274,21 @@ public class PanelGame extends JComponent{
 							bullets.remove(bullet);
 						}
 					}
-					
+					for(int i=0;i<boomEffects.size();i++)
+					{
+						Effect boomEffect =boomEffects.get(i);
+						if(boomEffect!=null)
+						{
+							boomEffect.update();
+							if(!boomEffect.check())
+							{
+								boomEffects.remove(boomEffect);
+							}
+						}else
+						{
+							boomEffects.remove(boomEffect);
+						}
+					}
 					sleep(1);
 				}
 				
@@ -289,7 +308,22 @@ public class PanelGame extends JComponent{
 				if(!area.isEmpty())
 				{
 					if(!rocket.updateHP(bullet.getSize()))
-					rockets.remove(rocket);
+					boomEffects.add(new Effect(bullet.getCenterX(),bullet.getCenterY(),3,5,60,0.5f,new Color(230,207,105)));
+					if(true)
+					{
+						score++;
+						rockets.remove(rocket);
+						double x=rocket.getX()+Rocket.ROCKET_SIZE/2;
+						double y=rocket.getY()+Rocket.ROCKET_SIZE/2;
+						boomEffects.add(new Effect(x,y,5,5,75,0.05f,new Color(32,178,169)));
+						boomEffects.add(new Effect(x,y,10,10,120,0.5f,new Color(102,216,250)));
+						boomEffects.add(new Effect(x,y,10,10,115,0.3f,new Color(230,207,105)));
+						boomEffects.add(new Effect(x,y,8,5,100,0.4f,new Color(240,96,117)));
+						boomEffects.add(new Effect(x,y,10,5,105,0.5f,new Color(255,70,70)));
+						boomEffects.add(new Effect(x,y,10,5,110,0.2f,new Color(121,76,217)));
+						
+					}
+					
 					bullets.remove(bullet);
 				}
 			}
@@ -345,7 +379,18 @@ public class PanelGame extends JComponent{
 				rocket.draw(g2);
 			}
 		}
+		for(int i=0;i<boomEffects.size();i++)
+		{
+			Effect boomEffect =boomEffects.get(i);
+			 if(boomEffect!=null)
+			 {
+				 boomEffect.draw(g2);
+			 }
+		}
+		
 		g2.setColor(Color.white);
+		g2.setFont(getFont().deriveFont(Font.BOLD,15f));
+		g2.drawString("Score : "+score, 10, 20);
 		if(!player.isAlive()) {
 			String text ="Game Over!";
 			String textKey ="Press enter to continue...";
@@ -394,4 +439,4 @@ public class PanelGame extends JComponent{
 			System.err.println(e);
 		}
 	}
-}
+}	
