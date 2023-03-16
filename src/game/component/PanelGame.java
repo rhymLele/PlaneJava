@@ -130,6 +130,143 @@ public class PanelGame extends JComponent{
 		requestFocus();
 		addKeyListener(new KeyAdapter()
 		{
+			@Overridpackage game.component;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.geom.Area;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+
+import game.obj.Bullet;
+import game.obj.Effect;
+import game.obj.Player;
+import game.obj.Rocket;
+
+public class PanelGame extends JComponent{
+	
+	private Graphics2D g2;
+	private BufferedImage image;
+	private int width;
+	private int height;
+	private Thread thread;
+	private boolean start=true;
+	private int shotTime;
+	private Key key;
+	private int score=0;
+//	private Image image2;
+//	private Image pic;
+	//game fps
+	private final int FPS=60;
+	private final int TARGET_TIME=1000000000/FPS;
+	//game obj
+	private Player player;
+	private List<Bullet> bullets;
+	private List<Rocket> rockets;
+	//game state
+	public int gameState;
+	public int playState=1;
+	public int pauseState=2;
+	private List <Effect> boomEffects;
+	//fps cac thu 
+	public void start()
+	{
+		gameState=1;
+		width=getWidth();
+		height=getHeight();
+		image=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+		g2=image.createGraphics();
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		thread=new Thread(new Runnable() {
+				@Override
+				public void run()
+				{
+					while(start)
+					{
+						long startTime=System.nanoTime();
+						drawBackground();
+						drawGame();
+						render();
+						long time=System.nanoTime()-startTime;
+						if(time<TARGET_TIME)
+						{
+							long sleep=(TARGET_TIME-time)/1000000;
+							sleep(sleep);
+						}
+					}
+				}
+		});
+		initObjectGame();
+		initKeyboard();
+		initBullets();
+		thread.start();
+	}
+	
+	private void addRocket()
+	{
+		Random ran=new Random();
+		int locationY=ran.nextInt(height-50)+25;
+		Rocket rocket=new Rocket();
+		rocket.changeLocation(0, locationY);
+		rocket.changeAngle(0);
+		rockets.add(rocket);
+		int locationY2=ran.nextInt(height-50)+25;
+		Rocket rocket2=new Rocket();
+		rocket2.changeLocation(width, locationY2);
+		rocket2.changeAngle(180);//from right to left
+		rockets.add(rocket2);
+	}
+	
+	private void initObjectGame()
+	{
+		player=new Player(); 
+		player.changeLocation(683, 384);
+		rockets=new ArrayList<>();
+		boomEffects=new ArrayList<>();
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				while(start)
+				{
+					addRocket();
+					sleep(2500);
+				}
+			}
+		}).start();
+	}
+	
+	private void resetGame() {
+		score=0;
+		rockets.clear();
+		bullets.clear();
+		player.changeLocation(683, 384);
+		player.reset();
+	}
+	
+	private void initKeyboard()
+	{
+		key = new Key();
+		requestFocus();
+		
+		addKeyListener(new KeyAdapter()
+		{
 			@Override
 			public void keyPressed(KeyEvent e)
 			{
@@ -151,6 +288,11 @@ public class PanelGame extends JComponent{
 				}else if(e.getKeyCode()==KeyEvent.VK_ESCAPE)
 				{
 					key.setKey_escape(true);
+				}else if(e.getKeyCode()==KeyEvent.VK_P)
+				{
+					key.setKey_pause(true);
+					if(gameState==playState) gameState=pauseState;
+					else if(gameState==pauseState) gameState=playState;
 				}
 			}
 				@Override
@@ -177,6 +319,9 @@ public class PanelGame extends JComponent{
 					}else if(e.getKeyCode()==KeyEvent.VK_ESCAPE)
 					{
 						key.setKey_escape(false);
+					}else if(e.getKeyCode()==KeyEvent.VK_P)
+					{
+						key.setKey_pause(false);
 					}
 				}
 				});
@@ -196,12 +341,17 @@ public class PanelGame extends JComponent{
 							{
 								angle+=s;
 							}
+							if(key.isKey_pause())
+							{
+								if(gameState==playState) gameState=pauseState;
+								else if(gameState==pauseState) gameState=playState;
+							}
 							if(key.isKey_j()||key.isKey_k()) {
 								if(shotTime==0) {
 									if(key.isKey_j()) {
-										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 3f));
+										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 1f));
 									}else {
-										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 20, 3f));
+										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 20, 1f));
 									}
 								}
 								shotTime++;
@@ -229,6 +379,7 @@ public class PanelGame extends JComponent{
 						else if(key.isKey_escape()) {
 							System.exit(0);
 						}
+						
 						
 						for(int i=0;i<rockets.size();i++)
 						{
@@ -352,8 +503,7 @@ public class PanelGame extends JComponent{
 	private void drawBackground()
 	{
 		g2.setColor(new Color(30,30,30));
-//		image2=new ImageIcon("game/image/Background.png");
-//		pic=image2.getImage();
+//		image2=new ImageIcon(getClass().getResource("/game/image/Background.png")).getImage();
 //		super.paintComponent(g2);
 //		g2.drawImage(pic,0,0,null);
 		g2.fillRect(0, 0, width, height);
@@ -361,7 +511,9 @@ public class PanelGame extends JComponent{
 	
 	private void drawGame()
 	{
-		if(player.isAlive()) {
+		if(gameState==playState)
+		{
+			if(player.isAlive()) {
 			player.draw(g2);
 		}
 		
@@ -421,6 +573,11 @@ public class PanelGame extends JComponent{
 			g2.drawString(textKey1, (int) x, (int) y + fm.getAscent()+100);
 			
 		}
+		}if(gameState==pauseState)
+		{
+			//nothing to do
+		}
+		
 	}
 	
 	private void render()
@@ -439,4 +596,9 @@ public class PanelGame extends JComponent{
 			System.err.println(e);
 		}
 	}
-}	
+	
+	private void drawPause()
+	{
+		
+	}
+}
