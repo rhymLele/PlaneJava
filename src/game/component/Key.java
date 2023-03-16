@@ -1,10 +1,24 @@
 package game.component;
 
 public class Key {
-	
+	private boolean key_right;
+	private boolean key_left;
+	private boolean key_space;
+	private boolean key_j;
+	private boolean key_k;
+	private boolean key_enter;
+	private boolean key_escape;
+	private boolean key_pause;
+	public boolean isKey_pause()
+	{
+		return key_pause;
+	}public void setKey_pause(boolean key_pause) {
+		this.key_right = key_pause;
+	}
 	public boolean isKey_right() {
 		return key_right;
 	}
+	
 	public void setKey_right(boolean key_right) {
 		this.key_right = key_right;
 	}
@@ -44,13 +58,7 @@ public class Key {
 	public void setKey_escape(boolean key_escape) {
 		this.key_escape = key_escape;
 	}
-	private boolean key_right;
-	private boolean key_left;
-	private boolean key_space;
-	private boolean key_j;
-	private boolean key_k;
-	private boolean key_enter;
-	private boolean key_escape;
+	
 	
 	
 }
