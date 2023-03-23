@@ -22,6 +22,7 @@ import game.obj.Bullet;
 import game.obj.Effect;
 import game.obj.Player;
 import game.obj.Rocket;
+import game.obj.sound.Sound;
 public class PanelGame extends JComponent{
 	
 	private Graphics2D g2;
@@ -42,6 +43,8 @@ public class PanelGame extends JComponent{
 	private Player player;
 	private List<Bullet> bullets;
 	private List<Rocket> rockets;
+	private Sound sound;
+	
 	//game state
 	public int gameState;
 	public int playState=1;
@@ -99,6 +102,7 @@ public class PanelGame extends JComponent{
 	
 	private void initObjectGame()
 	{
+		sound = new Sound();
 		player=new Player(); 
 		player.changeLocation(683, 384);
 		rockets=new ArrayList<>();
@@ -112,7 +116,7 @@ public class PanelGame extends JComponent{
 				{
 					if(gameState==playState) addRocket();
 //					if(gameState==pauseState) player.reset();
-					sleep(2500);
+					sleep(3000);
 				}
 			}
 		}).start();
@@ -226,10 +230,11 @@ public class PanelGame extends JComponent{
 								if(shotTime==0) {
 									shotTime++;
 									if(key.isKey_j()) {
-										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 1f));
+										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 3f));
 									}else {
-										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 15, 1f));
+										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 20, 0.5f));
 									}
+									sound.soundShoot();
 								}
 								
 								if(shotTime==5) {
@@ -341,6 +346,7 @@ public class PanelGame extends JComponent{
 						
 						score++;
 						rockets.remove(rocket);
+						sound.soundDestroy();
 						double x=rocket.getX()+Rocket.ROCKET_SIZE/2;
 						double y=rocket.getY()+Rocket.ROCKET_SIZE/2;
 						boomEffects.add(new Effect(x,y,5,5,75,0.05f,new Color(32,178,169)));
@@ -350,6 +356,9 @@ public class PanelGame extends JComponent{
 						boomEffects.add(new Effect(x,y,10,5,105,0.5f,new Color(255,70,70)));
 						boomEffects.add(new Effect(x,y,10,5,110,0.2f,new Color(121,76,217)));
 						
+					}
+					else {
+						sound.soundHit();
 					}
 					
 					bullets.remove(bullet);
@@ -370,10 +379,30 @@ public class PanelGame extends JComponent{
 					double rocketHp = rocket.getHP();
 					if(!rocket.updateHP(player.getHP())) {
 					rockets.remove(rocket);
+					sound.soundDestroy();
+					double x=rocket.getX()+Rocket.ROCKET_SIZE/2;
+					double y=rocket.getY()+Rocket.ROCKET_SIZE/2;
+					boomEffects.add(new Effect(x,y,5,5,75,0.05f,new Color(32,178,169)));
+					boomEffects.add(new Effect(x,y,10,10,120,0.5f,new Color(102,216,250)));
+					boomEffects.add(new Effect(x,y,10,10,115,0.3f,new Color(230,207,105)));
+					boomEffects.add(new Effect(x,y,8,5,100,0.4f,new Color(240,96,117)));
+					boomEffects.add(new Effect(x,y,10,5,105,0.5f,new Color(255,70,70)));
+					boomEffects.add(new Effect(x,y,10,5,110,0.2f,new Color(121,76,217)));
+					
 					}
 					if(gameState!=pauseState)
 					{if(!player.updateHP(rocketHp)) {
 						player.setAlive(false);
+						sound.soundDestroy();
+						double x=rocket.getX()+Rocket.ROCKET_SIZE/2;
+						double y=rocket.getY()+Rocket.ROCKET_SIZE/2;
+						boomEffects.add(new Effect(x,y,5,5,75,0.05f,new Color(32,178,169)));
+						boomEffects.add(new Effect(x,y,10,10,120,0.5f,new Color(102,216,250)));
+						boomEffects.add(new Effect(x,y,10,10,115,0.3f,new Color(230,207,105)));
+						boomEffects.add(new Effect(x,y,8,5,100,0.4f,new Color(240,96,117)));
+						boomEffects.add(new Effect(x,y,10,5,105,0.5f,new Color(255,70,70)));
+						boomEffects.add(new Effect(x,y,10,5,110,0.2f,new Color(121,76,217)));
+						
 						}
 					}
 					
@@ -429,8 +458,11 @@ public class PanelGame extends JComponent{
 		g2.drawString("Score : "+score, 10, 20);
 		if(!player.isAlive()) {
 			String text ="Game Over!";
-			String textKey ="Press enter to continue...";
-			String textKey1 ="Press esc to exit...";
+			String textKey ="   Press enter to continue...";
+			String textKey1 ="   Press esc to exit...";
+			
+			
+			
 			g2.setFont(getFont().deriveFont(Font.BOLD, 50f));
 			FontMetrics fm = g2.getFontMetrics();
 			Rectangle2D r2 = fm.getStringBounds(text, g2);
@@ -438,7 +470,8 @@ public class PanelGame extends JComponent{
 			double textHeight = r2.getHeight();
 			double x= (width - textWidth)/2;
 			double y= (height - textHeight)/2;
-			g2.drawString(text, (int) x, (int) y + fm.getAscent());
+			g2.drawString(text, (int) x, (int) y + fm.getAscent()-15);
+			
 			g2.setFont(getFont().deriveFont(Font.BOLD, 20f));
 			fm=g2.getFontMetrics();
 			r2 = fm.getStringBounds(textKey, g2);
@@ -447,6 +480,7 @@ public class PanelGame extends JComponent{
 			x= (width - textWidth)/2;
 			y= (height - textHeight)/2;
 			g2.drawString(textKey, (int) x, (int) y + fm.getAscent()+50);
+			
 			g2.setFont(getFont().deriveFont(Font.BOLD, 20f));
 			fm=g2.getFontMetrics();
 			r2 = fm.getStringBounds(textKey1, g2);
@@ -455,6 +489,15 @@ public class PanelGame extends JComponent{
 			x= (width - textWidth)/2;
 			y= (height - textHeight)/2;
 			g2.drawString(textKey1, (int) x, (int) y + fm.getAscent()+100);
+			
+			g2.setFont(getFont().deriveFont(Font.BOLD, 30f));
+			fm = g2.getFontMetrics();
+			r2 = fm.getStringBounds(text, g2);
+			textWidth = r2.getWidth();
+			textHeight = r2.getHeight();
+			x= (width - textWidth)/2;
+			y= (height - textHeight)/2;
+			g2.drawString("Final score: "+score+" ", (int) x, (int) y + fm.getAscent()-100);
 			
 		}
 		
