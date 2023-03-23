@@ -1,5 +1,4 @@
 package game.component;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -16,7 +15,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 
@@ -24,7 +22,6 @@ import game.obj.Bullet;
 import game.obj.Effect;
 import game.obj.Player;
 import game.obj.Rocket;
-
 public class PanelGame extends JComponent{
 	
 	private Graphics2D g2;
@@ -48,12 +45,12 @@ public class PanelGame extends JComponent{
 	//game state
 	public int gameState;
 	public int playState=1;
-	public int pauseState=2;
+	public int pauseState=0;
 	private List <Effect> boomEffects;
 	//fps cac thu 
 	public void start()
 	{
-		gameState=1;
+		gameState=playState;
 		width=getWidth();
 		height=getHeight();
 		image=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
@@ -113,7 +110,8 @@ public class PanelGame extends JComponent{
 				// TODO Auto-generated method stub
 				while(start)
 				{
-					addRocket();
+					if(gameState==playState) addRocket();
+//					if(gameState==pauseState) player.reset();
 					sleep(2500);
 				}
 			}
@@ -153,14 +151,24 @@ public class PanelGame extends JComponent{
 				}else if(e.getKeyCode()==KeyEvent.VK_K)
 				{
 					key.setKey_k(true);
+				}else if(e.getKeyCode()==KeyEvent.VK_ENTER)
+				{
+				key.setKey_enter(true);
 				}else if(e.getKeyCode()==KeyEvent.VK_ESCAPE)
 				{
 					key.setKey_escape(true);
 				}else if(e.getKeyCode()==KeyEvent.VK_P)
 				{
 					key.setKey_pause(true);
-					if(gameState==playState) gameState=pauseState;
-					else if(gameState==pauseState) gameState=playState;
+					if(gameState==playState)
+						{
+						gameState=pauseState;
+						}
+					else if(gameState==pauseState) {
+				
+						gameState=playState;
+						
+					}
 				}
 			}
 				@Override
@@ -216,18 +224,18 @@ public class PanelGame extends JComponent{
 							}
 							if(key.isKey_j()||key.isKey_k()) {
 								if(shotTime==0) {
+									shotTime++;
 									if(key.isKey_j()) {
 										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 1f));
 									}else {
-										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 20, 1f));
+										bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 15, 1f));
 									}
 								}
-								shotTime++;
+								
 								if(shotTime==5) {
 									shotTime=0;
 								}
-							}
-							
+							}	
 							else {
 								shotTime=0;
 							}
@@ -326,10 +334,11 @@ public class PanelGame extends JComponent{
 				area.intersect(rocket.getShape());
 				if(!area.isEmpty())
 				{
-					if(!rocket.updateHP(bullet.getSize()))
+					
 					boomEffects.add(new Effect(bullet.getCenterX(),bullet.getCenterY(),3,5,60,0.5f,new Color(230,207,105)));
-					if(true)
+					if(!rocket.updateHP(bullet.getSize()))
 					{
+						
 						score++;
 						rockets.remove(rocket);
 						double x=rocket.getX()+Rocket.ROCKET_SIZE/2;
@@ -355,15 +364,19 @@ public class PanelGame extends JComponent{
 			{
 				Area area=new Area(player.getShape());
 				area.intersect(rocket.getShape());
+//				if(gameState==pauseState) area.isEmpty();
 				if(!area.isEmpty())
 				{
 					double rocketHp = rocket.getHP();
 					if(!rocket.updateHP(player.getHP())) {
 					rockets.remove(rocket);
 					}
-					if(!player.updateHP(rocketHp)) {
+					if(gameState!=pauseState)
+					{if(!player.updateHP(rocketHp)) {
 						player.setAlive(false);
 						}
+					}
+					
 				}
 			}
 	}
@@ -406,8 +419,11 @@ public class PanelGame extends JComponent{
 			 {
 				 boomEffect.draw(g2);
 			 }
+		}}
+		if(gameState==pauseState)
+		{
+			drawPause(g2);
 		}
-		
 		g2.setColor(Color.white);
 		g2.setFont(getFont().deriveFont(Font.BOLD,15f));
 		g2.drawString("Score : "+score, 10, 20);
@@ -441,10 +457,7 @@ public class PanelGame extends JComponent{
 			g2.drawString(textKey1, (int) x, (int) y + fm.getAscent()+100);
 			
 		}
-		}if(gameState==pauseState)
-		{
-			//nothing to do
-		}
+		
 		
 	}
 	
@@ -465,8 +478,18 @@ public class PanelGame extends JComponent{
 		}
 	}
 	
-	private void drawPause()
+	private void drawPause(Graphics2D g2)
 	{
+		g2.setColor(Color.white);
+		g2.setFont(new Font("Monospaced",Font.ITALIC,50));
+		PauseScreen();
+	}
+	private void PauseScreen() {
+		String text ="PAUSED";
 		
+		int y=getHeight()/2;
+		int length=(int)g2.getFontMetrics().getStringBounds(text, g2).getWidth();
+		int x=getWidth()/2-length/2;
+		g2.drawString(text, x, y);
 	}
 }
